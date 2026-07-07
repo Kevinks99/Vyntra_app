@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, MapPin, Award, LogOut, Check, Scale, Droplet, Sparkles, Image as ImageIcon, ShieldAlert, Moon, Sun, HelpCircle, Compass, Loader2, ChevronDown, BookOpen } from 'lucide-react';
+import { User, MapPin, Award, LogOut, Check, Scale, Droplet, Ruler, Sparkles, Image as ImageIcon, ShieldAlert, Moon, Sun, HelpCircle, Compass, Loader2, ChevronDown, BookOpen, Bell, Settings } from 'lucide-react';
 import { AppState } from '../types';
 import { getCleanInitialState } from '../data';
 
@@ -22,6 +22,7 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
   const [temp, setTemp] = useState(state.profile.temperature || '');
   const [weightGoal, setWeightGoal] = useState((state.weightGoal || 0).toString());
   const [waterGoal, setWaterGoal] = useState((state.waterIntakeGoalCups || 8).toString());
+  const [height, setHeight] = useState((state.profile.height || 175).toString());
   
   const [savedMsg, setSavedMsg] = useState(false);
   const [showGalleryPermission, setShowGalleryPermission] = useState(false);
@@ -39,6 +40,7 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
     setTemp(cleanState.profile.temperature);
     setWeightGoal(cleanState.weightGoal.toString());
     setWaterGoal(cleanState.waterIntakeGoalCups.toString());
+    setHeight((cleanState.profile.height || 175).toString());
     
     setShowResetConfirm(false);
     setLocationError("Todos os dados do seu perfil foram limpos e reiniciados com sucesso!");
@@ -64,57 +66,110 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
     }
   };
 
-  const handleAutoLocate = async () => {
-    setLocationError(null);
-    if (!navigator.geolocation) {
-      setLocationError("Geolocalização não é suportada por seu navegador.");
-      return;
-    }
-    setLoadingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
+  const handleToggleNotifications = async () => {
+    const nextVal = !state.notificationsEnabled;
+    if (nextVal) {
+      if ('Notification' in window) {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 7000);
-
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-            { signal: controller.signal }
-          );
-          const geoData = await geoRes.json();
-          clearTimeout(timeoutId);
-          
-          const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.state || "Sua Localização";
-
-          const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-          );
-          const weatherData = await weatherRes.json();
-          const currentTemp = weatherData.current_weather?.temperature;
-
-          setLocation(city);
-          if (currentTemp !== undefined) {
-            setTemp(`${Math.round(currentTemp)}°C`);
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            onStateChange({
+              ...state,
+              notificationsEnabled: true
+            });
+            setLocationError("Permissão de notificações concedida com sucesso!");
+            setTimeout(() => setLocationError(null), 3500);
+          } else {
+            setLocationError("Permissão de notificações foi negada pelo navegador.");
+            setTimeout(() => setLocationError(null), 4000);
           }
-        } catch (err) {
-          console.error("Erro ao buscar dados de localização/clima:", err);
-          setLocationError("Não foi possível carregar os dados climáticos automaticamente. Digite sua cidade manualmente.");
-        } finally {
-          setLoadingLocation(false);
+        } catch (e) {
+          onStateChange({
+            ...state,
+            notificationsEnabled: true
+          });
+          setLocationError("Notificações simuladas ativadas com sucesso!");
+          setTimeout(() => setLocationError(null), 3500);
         }
-      },
-      (error) => {
-        console.error("Erro ao obter geolocalização:", error);
-        setLoadingLocation(false);
-        if (error.code === 1) {
-          setLocationError("Permissão de localização negada pelo navegador. Ative as permissões ou insira manualmente.");
-        } else {
-          setLocationError("Não foi possível obter sua localização atual do GPS. Por favor, digite manualmente.");
-        }
-      },
-      { enableHighAccuracy: false, timeout: 8000 }
-    );
+      } else {
+        onStateChange({
+          ...state,
+          notificationsEnabled: true
+        });
+      }
+    } else {
+      onStateChange({
+        ...state,
+        notificationsEnabled: false
+      });
+    }
+  };
+
+  const handleToggleLocation = async () => {
+    const nextVal = !state.locationEnabled;
+    if (nextVal) {
+      if (navigator.geolocation) {
+        setLoadingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const geoRes = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+              );
+              const geoData = await geoRes.json();
+              const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.state || "Sua Cidade";
+              
+              const weatherRes = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+              );
+              const weatherData = await weatherRes.json();
+              const currentTemp = weatherData.current_weather?.temperature;
+
+              onStateChange({
+                ...state,
+                locationEnabled: true,
+                profile: {
+                  ...state.profile,
+                  location: city,
+                  temperature: currentTemp !== undefined ? `${Math.round(currentTemp)}°C` : state.profile.temperature
+                }
+              });
+              setLocation(city);
+              if (currentTemp !== undefined) {
+                setTemp(`${Math.round(currentTemp)}°C`);
+              }
+              setLocationError("Serviços de localização ativados com sucesso!");
+              setTimeout(() => setLocationError(null), 3500);
+            } catch (err) {
+              onStateChange({
+                ...state,
+                locationEnabled: true
+              });
+              setLocationError("Localização GPS ativada, mas houve erro ao carregar nome da cidade.");
+              setTimeout(() => setLocationError(null), 4000);
+            } finally {
+              setLoadingLocation(false);
+            }
+          },
+          (err) => {
+            setLoadingLocation(false);
+            setLocationError("Permissão de localização negada pelo navegador.");
+            setTimeout(() => setLocationError(null), 4000);
+          }
+        );
+      } else {
+        onStateChange({
+          ...state,
+          locationEnabled: true
+        });
+      }
+    } else {
+      onStateChange({
+        ...state,
+        locationEnabled: false
+      });
+    }
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,7 +184,8 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
         ...state.profile,
         name: name,
         location: location,
-        temperature: temp
+        temperature: temp,
+        height: parseInt(height, 10) || 175
       }
     });
 
@@ -321,31 +377,20 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
           </div>
         </div>
 
-        {/* Automatic location & weather retrieval */}
-        <button
-          type="button"
-          onClick={handleAutoLocate}
-          disabled={loadingLocation}
-          className="w-full h-11 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-transparent"
-        >
-          {loadingLocation ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> Localizando & Buscando Clima...
-            </>
-          ) : (
-            <>
-              <Compass className="w-4 h-4 text-blue-600" /> Detectar Localidade & Clima (Auto)
-            </>
-          )}
-        </button>
+        {locationError && (() => {
+          const isSuccess = locationError.toLowerCase().includes("sucesso") || locationError.toLowerCase().includes("concedida") || locationError.toLowerCase().includes("ativad");
+          return (
+            <div className={`text-[11px] font-bold p-3 rounded-xl animate-fade-in text-center leading-normal border ${
+              isSuccess 
+                ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" 
+                : "text-red-500 bg-red-50 dark:bg-red-950/20 dark:text-red-400 border-red-100 dark:border-red-900/30"
+            }`}>
+              {locationError}
+            </div>
+          );
+        })()}
 
-        {locationError && (
-          <div className="text-red-500 bg-red-50 dark:bg-red-950/20 dark:text-red-400 border border-red-100 dark:border-red-900/30 text-[11px] font-bold p-3 rounded-xl animate-fade-in text-center leading-normal">
-            {locationError}
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
               <Scale className="w-3.5 h-3.5 text-outline" /> Meta Peso (kg)
@@ -369,6 +414,18 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
               className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
             />
           </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
+              <Ruler className="w-3.5 h-3.5 text-outline" /> Altura (cm)
+            </label>
+            <input 
+              type="number" 
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="175"
+              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+            />
+          </div>
         </div>
 
         <button 
@@ -379,20 +436,68 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
         </button>
       </form>
 
-      {/* Visuais Preference Section (Dark Mode) */}
-      <section className="glass-card p-6 rounded-[28px] space-y-4">
+      {/* Configurações de Alerta Section */}
+      <section className="glass-card p-6 rounded-[28px] space-y-5">
         <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2 flex items-center gap-1.5">
-          <Sun className="w-4 h-4 text-amber-500" /> Preferências Visuais
+          <Bell className="w-4 h-4 text-blue-600 animate-pulse" /> Configurações de Alerta
         </h4>
+
+        {/* Notifications Toggle */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100/50 dark:border-slate-800/50">
+          <div>
+            <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100">Permitir Notificações</h5>
+            <p className="text-[11px] text-slate-500 font-medium">Receba alertas em tempo real sobre compromissos da agenda e lembretes de saúde</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleNotifications}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${state.notificationsEnabled ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+          >
+            <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${state.notificationsEnabled ? 'translate-x-6' : 'translate-x-0'}`}>
+              <Bell className={`w-3 h-3 ${state.notificationsEnabled ? 'text-blue-600' : 'text-slate-400'}`} />
+            </div>
+          </button>
+        </div>
+
+        {/* Location Toggle */}
         <div className="flex items-center justify-between">
           <div>
-            <h5 className="text-sm font-bold text-slate-800">Modo Escuro / Dark Mode</h5>
-            <p className="text-[11px] text-slate-500 font-medium">Ativa o visual de alto contraste escuro no app</p>
+            <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100 font-sans">Capturar minha localização</h5>
+            <p className="text-[11px] text-slate-500 font-medium">Sincronize sua cidade e região para obter previsões climáticas automáticas</p>
+          </div>
+          <button
+            type="button"
+            disabled={loadingLocation}
+            onClick={handleToggleLocation}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${state.locationEnabled ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'} ${loadingLocation ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${state.locationEnabled ? 'translate-x-6' : 'translate-x-0'}`}>
+              {loadingLocation ? (
+                <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />
+              ) : (
+                <Compass className={`w-3 h-3 ${state.locationEnabled ? 'text-blue-600' : 'text-slate-400'}`} />
+              )}
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* Preferências do Aplicativo Section */}
+      <section className="glass-card p-6 rounded-[28px] space-y-5">
+        <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2 flex items-center gap-1.5">
+          <Settings className="w-4 h-4 text-blue-600 animate-spin-slow" /> Preferências do Aplicativo
+        </h4>
+
+        {/* Dark Mode Toggle */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h5 className="text-sm font-bold text-slate-800 dark:text-slate-100">Modo Escuro</h5>
+            <p className="text-[11px] text-slate-500 font-medium">Ativa o visual de alto contraste escuro</p>
           </div>
           <button
             type="button"
             onClick={toggleDarkMode}
-            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${isDark ? 'bg-blue-600' : 'bg-slate-200'}`}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${isDark ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
           >
             <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${isDark ? 'translate-x-6' : 'translate-x-0'}`}>
               {isDark ? <Moon className="w-3.5 h-3.5 text-blue-600" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}

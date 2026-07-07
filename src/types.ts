@@ -12,7 +12,8 @@ export type ActiveScreen =
   | 'ranking'
   | 'estudos'
   | 'biblioteca'
-  | 'assistant';
+  | 'assistant'
+  | 'notifications';
 
 export interface RankedUser {
   id: string;
@@ -34,6 +35,7 @@ export interface UserProfile {
   avatarWeightUrl: string;
   avatarNutritionUrl: string;
   streakDays: number;
+  height?: number;
 }
 
 export interface WeightLog {
@@ -112,6 +114,19 @@ export interface RecentActivity {
   iconType: 'book' | 'add' | 'edit';
 }
 
+export interface NotificationItem {
+  id: string;
+  category: 'vyn' | 'saude' | 'produtividade' | 'conquista';
+  source: string;
+  time: string;
+  title: string;
+  description: string;
+  read: boolean;
+  actionType?: 'water' | 'meet' | 'agenda' | 'none';
+  actionLabel?: string;
+  metaData?: any;
+}
+
 export interface AppState {
   profile: UserProfile;
   waterIntakeCups: number;
@@ -141,5 +156,7 @@ export interface AppState {
   recentActivities: RecentActivity[];
   notificationsEnabled: boolean;
   biometricsEnabled: boolean;
+  locationEnabled?: boolean;
   contacts?: RankedUser[];
+  notifications?: NotificationItem[];
 }

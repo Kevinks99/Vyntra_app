@@ -9,7 +9,8 @@ import {
   Check, 
   Plus, 
   Brain,
-  Scale
+  Scale,
+  Bell
 } from 'lucide-react';
 import { AppState, ActiveScreen } from '../types';
 
@@ -90,14 +91,32 @@ export default function DashboardView({ state, onStateChange, onNavigate }: Dash
           </div>
         </div>
         
-        <button 
-          onClick={handleGenerateInsight}
-          className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-primary active:scale-90 cursor-pointer relative"
-          title="Pedir Insight da IA"
-        >
-          <Sparkles className="w-5 h-5 animate-pulse" />
-          <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => onNavigate('notifications')}
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors text-slate-600 dark:text-slate-300 active:scale-90 cursor-pointer relative"
+            title="Notificações"
+          >
+            <Bell className="w-5 h-5 stroke-[2.2]" />
+            {(() => {
+              const unreadCount = (state.notifications || []).filter(n => !n.read).length;
+              return unreadCount > 0 ? (
+                <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-red-500 text-white text-[9px] font-extrabold rounded-full border border-[#faf8ff] dark:border-[#0c0e17] flex items-center justify-center animate-pulse">
+                  {unreadCount}
+                </span>
+              ) : null;
+            })()}
+          </button>
+          
+          <button 
+            onClick={handleGenerateInsight}
+            className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-primary active:scale-90 cursor-pointer relative"
+            title="Pedir Insight da IA"
+          >
+            <Sparkles className="w-5 h-5 animate-pulse" />
+            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+          </button>
+        </div>
       </header>
 
       {/* Vyn AI Insight Glassmorphic Card */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
   Search, 
@@ -13,6 +13,7 @@ import {
   Award
 } from 'lucide-react';
 import { AppState } from '../types';
+import { auth, subscribeToAllUsers } from '../lib/firebase';
 
 interface RankingViewProps {
   state: AppState;
@@ -37,6 +38,14 @@ export default function RankingView({ state, onStateChange }: RankingViewProps) 
   const [inviteSuccess, setInviteSuccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [allFirestoreUsers, setAllFirestoreUsers] = useState<RankedUser[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAllUsers((users) => {
+      setAllFirestoreUsers(users);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Calculate user's score based on actual metrics from Firestore!
   const userStreak = state.profile.streakDays || 1;
@@ -49,9 +58,8 @@ export default function RankingView({ state, onStateChange }: RankingViewProps) 
   // Get ranked users from state.contacts (empty by default, user-populated)
   const initialRankedUsers: RankedUser[] = state.contacts || [];
 
-  // Insert logged-in user dynamically into the rankings based on points
   const currentUserObj: RankedUser = {
-    id: 'current-user-id',
+    id: auth.currentUser?.uid || 'current-user-id',
     name: state.profile.name || 'Você',
     avatarUrl: state.profile.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
     points: userPoints,
@@ -60,13 +68,23 @@ export default function RankingView({ state, onStateChange }: RankingViewProps) 
     isCurrentUser: true
   };
 
+  const currentUid = auth.currentUser?.uid;
+
   // Combine and sort
-  const allUsersSorted = [...initialRankedUsers, currentUserObj]
-    .sort((a, b) => b.points - a.points)
-    .map((usr, index) => ({
-      ...usr,
-      rank: index + 1
-    }));
+  const allUsersSorted = (activeTab === 'geral' && allFirestoreUsers.length > 0)
+    ? allFirestoreUsers.map(usr => ({
+        ...usr,
+        isCurrentUser: usr.id === currentUid
+      })).sort((a, b) => b.points - a.points).map((usr, index) => ({
+        ...usr,
+        rank: index + 1
+      }))
+    : [...initialRankedUsers, currentUserObj]
+        .sort((a, b) => b.points - a.points)
+        .map((usr, index) => ({
+          ...usr,
+          rank: index + 1
+        }));
 
   const podium1 = allUsersSorted.find(u => u.rank === 1) || allUsersSorted[0];
   const podium2 = allUsersSorted.find(u => u.rank === 2) || allUsersSorted[1];

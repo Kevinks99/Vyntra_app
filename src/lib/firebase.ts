@@ -16,9 +16,10 @@ import {
   doc, 
   setDoc, 
   getDoc, 
-  onSnapshot 
+  onSnapshot,
+  collection
 } from 'firebase/firestore';
-import { AppState } from '../types';
+import { AppState, RankedUser } from '../types';
 
 // Web App configuration from firebase-applet-config.json
 const firebaseConfig = {
@@ -126,5 +127,33 @@ export function subscribeToUserState(userId: string, callback: (state: AppState 
     } else {
       callback(null);
     }
+  });
+}
+
+export function subscribeToAllUsers(callback: (users: RankedUser[]) => void) {
+  const collRef = collection(db, 'users');
+  return onSnapshot(collRef, (snapshot) => {
+    const users: RankedUser[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as AppState;
+      if (data && data.profile) {
+        const profile = data.profile;
+        const userStreak = profile.streakDays || 0;
+        const userWorkoutsCount = data.workouts?.length || 0;
+        const userWaterCount = data.waterIntakeCups || 0;
+        const userBooksRead = data.books?.filter(b => b.progressPercent === 100).length || 0;
+        const userPoints = (userStreak * 150) + (userWorkoutsCount * 120) + (userWaterCount * 15) + (userBooksRead * 500) + 750;
+
+        users.push({
+          id: docSnap.id,
+          name: profile.name || 'Competidor Vyntra',
+          avatarUrl: profile.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200',
+          points: userPoints,
+          streak: userStreak,
+          rank: 0
+        });
+      }
+    });
+    callback(users);
   });
 }

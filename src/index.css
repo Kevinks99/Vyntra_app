@@ -1,44 +1,72 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* Enable class-based dark mode matching the `.dark` class on body/html */
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-surface-bg: #faf8ff;
+  --color-card-bg: rgba(255, 255, 255, 0.7);
+  --color-card-border: rgba(229, 231, 235, 0.5);
+  
+  --input-bg: #f8fafc;
+  --input-text: #0f172a;
+  --input-border: #cbd5e1;
+  
+  --color-on-surface: #191b23;
+  --color-on-surface-variant: #434655;
+  --color-outline: #5d5f6f;
+  --color-outline-variant: #c3c6d7;
+}
+
+body.dark {
+  --color-surface-bg: #0c0e17;
+  --color-card-bg: rgba(22, 27, 42, 0.8);
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  
+  --input-bg: #1e2538;
+  --input-text: #ffffff;
+  --input-border: #2f3b55;
+  
+  --color-on-surface: #f3f4f6;
+  --color-on-surface-variant: #e2e8f0;
+  --color-outline: #94a3b8;
+  --color-outline-variant: #232d43;
+}
+
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --color-primary: #2563eb;
   --color-secondary: #006c49;
   --color-tertiary: #6a1edb;
-  --color-surface: #faf8ff;
-  --color-on-surface: #191b23;
-  --color-outline: #5d5f6f;
-  --color-outline-variant: #c3c6d7;
+  --color-surface: var(--color-surface-bg);
+  --color-on-surface: var(--color-on-surface);
+  --color-outline: var(--color-outline);
+  --color-outline-variant: var(--color-outline-variant);
+  
+  /* Additional semantic variables */
+  --color-card: var(--color-card-bg);
+  --color-border-custom: var(--color-card-border);
+  --color-input: var(--input-bg);
+  --color-input-text: var(--input-text);
+  --color-input-border: var(--input-border);
 }
 
 body {
   font-family: 'Inter', sans-serif;
-  background-color: #faf8ff;
-  color: #191b23;
+  background-color: var(--color-surface-bg);
+  color: var(--color-on-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s, color 0.3s;
 }
 
-body.dark {
-  background-color: #0f111a;
-  color: #f3f4f6;
-}
-
 /* Glassmorphic Cards & Panels matching Vyntra guidelines */
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--color-card-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(229, 231, 235, 0.5);
-}
-
-.dark .glass-card {
-  background: rgba(25, 27, 35, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-card-border);
 }
 
 /* Custom shadow effects matching the design specs */
@@ -74,133 +102,115 @@ body.dark {
   scrollbar-width: none;
 }
 
-/* Comprehensive CSS Dark Mode Overrides */
-body.dark {
-  background-color: #0c0e17 !important;
-  color: #f3f4f6 !important;
+/* Premium High-Contrast and Visibility Fallbacks for Dark Mode (low specificity, easily overridden by tailwind utilities) */
+:where(.dark) {
+  background-color: #0c0e17;
+  color: #f3f4f6;
 }
 
-body.dark main,
-body.dark #assistant-view-root {
+:where(.dark) main,
+:where(.dark) #assistant-view-root {
   background-color: #0c0e17;
 }
 
-body.dark nav {
-  background-color: rgba(17, 24, 39, 0.9) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) nav {
+  background-color: rgba(17, 24, 39, 0.9);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-body.dark .bg-white {
-  background-color: #161b2a !important; /* Premium dark blue-slate */
+:where(.dark) .bg-white {
+  background-color: #161b2a; /* Premium dark blue-slate */
 }
 
-body.dark .bg-slate-50,
-body.dark .bg-slate-100,
-body.dark .bg-slate-200 {
-  background-color: #1e2538 !important; /* Slightly lighter slate for contrast */
+:where(.dark) .bg-slate-50,
+:where(.dark) .bg-slate-100,
+:where(.dark) .bg-slate-200 {
+  background-color: #1e2538; /* Slightly lighter slate for contrast */
 }
 
-/* Explicit class-based color safety for dark mode */
-body.dark h1, 
-body.dark h2, 
-body.dark h3, 
-body.dark h4, 
-body.dark h5, 
-body.dark h6 {
-  color: #ffffff !important;
-}
-
-body.dark .text-slate-950,
-body.dark .text-slate-900,
-body.dark .text-slate-800,
-body.dark .text-slate-700,
-body.dark .text-[#191b23],
-body.dark .text-on-surface {
-  color: #f3f4f6 !important;
-}
-
-body.dark .text-slate-600,
-body.dark .text-[#434655],
-body.dark .text-on-surface-variant {
-  color: #d1d5db !important;
-}
-
-body.dark .text-slate-500,
-body.dark .text-[#737686],
-body.dark .text-outline {
-  color: #9ca3af !important;
-}
-
-body.dark .text-slate-400,
-body.dark .text-outline-variant {
-  color: #a1a5b7 !important;
-}
-
-body.dark .border-slate-50,
-body.dark .border-slate-100,
-body.dark .border-slate-200,
-body.dark .border-slate-100\/50 {
-  border-color: #232d43 !important; /* Subtle dark border */
-}
-
-body.dark input,
-body.dark select,
-body.dark textarea {
-  background-color: #1e2538;
+:where(.dark) h1, 
+:where(.dark) h2, 
+:where(.dark) h3, 
+:where(.dark) h4, 
+:where(.dark) h5, 
+:where(.dark) h6 {
   color: #ffffff;
-  border-color: #2f3b55;
 }
 
-body.dark input::placeholder {
-  color: #6b7280;
+:where(.dark) .text-slate-950,
+:where(.dark) .text-slate-900,
+:where(.dark) .text-slate-800,
+:where(.dark) .text-slate-700,
+:where(.dark) .text-[#191b23],
+:where(.dark) .text-on-surface {
+  color: #f3f4f6;
+}
+
+:where(.dark) .text-slate-600,
+:where(.dark) .text-[#434655],
+:where(.dark) .text-on-surface-variant {
+  color: #cbd5e1;
+}
+
+:where(.dark) .text-slate-500,
+:where(.dark) .text-[#737686],
+:where(.dark) .text-outline {
+  color: #94a3b8;
+}
+
+:where(.dark) .text-slate-400,
+:where(.dark) .text-outline-variant {
+  color: #a1a5b7;
+}
+
+:where(.dark) .border-slate-50,
+:where(.dark) .border-slate-100,
+:where(.dark) .border-slate-200,
+:where(.dark) .border-slate-100\/50 {
+  border-color: #232d43; /* Subtle dark border */
 }
 
 /* Color Safety Overrides for Category Cards/Text in Dark Mode */
-body.dark .text-purple-950,
-body.dark .text-purple-900,
-body.dark .text-purple-800,
-body.dark .text-purple-700 {
-  color: #f5f3ff !important;
+:where(.dark) .text-purple-950,
+:where(.dark) .text-purple-900,
+:where(.dark) .text-purple-800,
+:where(.dark) .text-purple-700 {
+  color: #f5f3ff;
 }
 
-body.dark .bg-purple-50\/40,
-body.dark .bg-purple-50,
-body.dark .bg-purple-100 {
-  background-color: #2e1065 !important;
+:where(.dark) .bg-purple-50\/40,
+:where(.dark) .bg-purple-50,
+:where(.dark) .bg-purple-100 {
+  background-color: #2e1065;
 }
 
-body.dark .text-emerald-950,
-body.dark .text-emerald-900,
-body.dark .text-emerald-800,
-body.dark .text-emerald-700 {
-  color: #ecfdf5 !important;
+:where(.dark) .text-emerald-950,
+:where(.dark) .text-emerald-900,
+:where(.dark) .text-emerald-800,
+:where(.dark) .text-emerald-700 {
+  color: #ecfdf5;
 }
 
-body.dark .bg-emerald-50\/30,
-body.dark .bg-emerald-50,
-body.dark .bg-emerald-100 {
-  background-color: #064e3b !important;
+:where(.dark) .bg-emerald-50\/30,
+:where(.dark) .bg-emerald-50,
+:where(.dark) .bg-emerald-100 {
+  background-color: #064e3b;
 }
 
-body.dark .text-blue-950,
-body.dark .text-blue-900,
-body.dark .text-blue-800,
-body.dark .text-blue-700,
-body.dark .text-indigo-950,
-body.dark .text-indigo-900,
-body.dark .text-indigo-800,
-body.dark .text-indigo-700 {
-  color: #eff6ff !important;
+:where(.dark) .text-blue-950,
+:where(.dark) .text-blue-900,
+:where(.dark) .text-blue-800,
+:where(.dark) .text-blue-700,
+:where(.dark) .text-indigo-950,
+:where(.dark) .text-indigo-900,
+:where(.dark) .text-indigo-800,
+:where(.dark) .text-indigo-700 {
+  color: #eff6ff;
 }
 
-body.dark .bg-blue-50,
-body.dark .bg-blue-100 {
-  background-color: #1e3a8a !important;
-}
-
-body.dark .glass-card {
-  background: rgba(22, 27, 42, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) .bg-blue-50,
+:where(.dark) .bg-blue-100 {
+  background-color: #1e3a8a;
 }
 
 /* Custom Animations */
@@ -231,3 +241,48 @@ body.dark .glass-card {
   animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Form elements styling - guaranteed high-contrast & compatibility with Tailwind classes */
+input, select, textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--input-border) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  background-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
+  opacity: 0.7 !important;
+}
+
+.dark input:disabled, 
+.dark select:disabled, 
+.dark textarea:disabled {
+  background-color: #111422 !important;
+  color: #475569 !important;
+  border-color: #1e2538 !important;
+  opacity: 0.7 !important;
+}
+
+/* Specific styling for Vyn AI assistant input to prevent black/glitched background on re-render, screen adjust, or loading state */
+#assistant-view-root input {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+}
+
+#assistant-view-root input:disabled {
+  background-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  opacity: 0.7 !important;
+}
+
+.dark #assistant-view-root input:disabled {
+  background-color: #111422 !important;
+  color: #475569 !important;
+  opacity: 0.7 !important;
+}

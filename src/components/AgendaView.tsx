@@ -56,8 +56,6 @@ const getDaysOfCurrentWeek = () => {
 export default function AgendaView({ state, onStateChange }: AgendaViewProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showPermissionModal, setShowPermissionModal] = useState(false);
-  const [permissionStatus, setPermissionStatus] = useState<'default' | 'granted' | 'denied'>('default');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
 
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
@@ -76,21 +74,6 @@ export default function AgendaView({ state, onStateChange }: AgendaViewProps) {
   const filteredEvents = (state.agendaEvents || []).filter(
     (e) => e.dateString === selectedDate
   ).sort((a, b) => a.time.localeCompare(b.time));
-
-  const handleRequestNotificationPermission = () => {
-    setShowPermissionModal(true);
-  };
-
-  const handleConfirmPermission = (allowed: boolean) => {
-    setShowPermissionModal(false);
-    if (allowed) {
-      setPermissionStatus('granted');
-      setAlertEnabled(true);
-    } else {
-      setPermissionStatus('denied');
-      setAlertEnabled(false);
-    }
-  };
 
   const handleCreateEvent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,21 +213,6 @@ export default function AgendaView({ state, onStateChange }: AgendaViewProps) {
               Mês Completo
             </button>
           </div>
-
-          <button 
-            onClick={handleRequestNotificationPermission}
-            className="p-3 bg-blue-50 text-blue-600 hover:bg-blue-100/80 rounded-2xl transition-all cursor-pointer relative"
-            title="Permissão de Notificações"
-          >
-            {permissionStatus === 'granted' ? (
-              <Bell className="w-5 h-5" />
-            ) : (
-              <BellOff className="w-5 h-5 text-slate-400" />
-            )}
-            {permissionStatus === 'default' && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-            )}
-          </button>
         </div>
       </div>
 
@@ -445,41 +413,10 @@ export default function AgendaView({ state, onStateChange }: AgendaViewProps) {
         <Plus className="w-6 h-6 stroke-[2.5]" />
       </button>
 
-      {/* Dialog for Requesting Notifications */}
-      {showPermissionModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center space-y-4 shadow-xl">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
-              <Bell className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-slate-800">Permissão para Alertas</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Vyntra solicita permissão para enviar notificações push ao seu celular para alertá-lo das suas programações.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                onClick={() => handleConfirmPermission(false)}
-                className="py-2.5 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer"
-              >
-                Negar
-              </button>
-              <button
-                onClick={() => handleConfirmPermission(true)}
-                className="py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 cursor-pointer"
-              >
-                Permitir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Event Registration Drawer Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 space-y-4 animate-slide-up shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 pb-10 space-y-4 animate-slide-up shadow-2xl max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-lg font-extrabold text-slate-800 dark:text-slate-100">Registrar Programação</h3>
               <button 
@@ -563,25 +500,23 @@ export default function AgendaView({ state, onStateChange }: AgendaViewProps) {
               </div>
 
               {/* Alert Toggle */}
-              <div className="flex items-center justify-between py-1 bg-slate-50 rounded-2xl px-4">
+              <div className="flex items-center justify-between py-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-4">
                 <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-blue-600" />
+                  <Bell className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <div>
-                    <span className="text-xs font-bold text-slate-700 block">Ativar Alertas</span>
-                    <span className="text-[10px] text-slate-400 block">Alertar 15min antes</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Ativar Alertas</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
+                      {state.notificationsEnabled 
+                        ? "Alertar 15min antes" 
+                        : "Ative notificações no Perfil para receber"}
+                    </span>
                   </div>
                 </div>
                 <input
                   type="checkbox"
                   checked={alertEnabled}
-                  onChange={(e) => {
-                    if (e.target.checked && permissionStatus !== 'granted') {
-                      handleRequestNotificationPermission();
-                    } else {
-                      setAlertEnabled(e.target.checked);
-                    }
-                  }}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                  onChange={(e) => setAlertEnabled(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500 cursor-pointer"
                 />
               </div>
 

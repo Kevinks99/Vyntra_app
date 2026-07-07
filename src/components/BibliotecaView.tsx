@@ -11,7 +11,8 @@ import {
   ChevronRight,
   TrendingUp,
   FileText,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Trash2
 } from 'lucide-react';
 import { AppState, Book, RecentActivity } from '../types';
 
@@ -39,6 +40,15 @@ export default function BibliotecaView({ state, onStateChange }: BibliotecaViewP
   const currentReadingBook = books[0] || null;
   const listBooks = books.slice(1);
   const recentActivities = state.recentActivities || [];
+
+  const handleDeleteBook = (bookId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updatedBooks = books.filter(b => b.id !== bookId);
+    onStateChange({
+      ...state,
+      books: updatedBooks
+    });
+  };
 
   const handleCreateBook = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,6 +197,14 @@ export default function BibliotecaView({ state, onStateChange }: BibliotecaViewP
       {/* READING NOW SECTION */}
       {currentReadingBook && (
         <section className="bg-white rounded-[32px] p-6 border border-slate-100 space-y-5 shadow-sm relative">
+          <button 
+            onClick={(e) => handleDeleteBook(currentReadingBook.id, e)}
+            className="absolute top-4 left-4 p-1.5 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/60 rounded-full text-red-500 cursor-pointer transition-colors"
+            title="Remover livro"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+
           <div className="absolute top-4 right-4 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
             Lendo Agora
           </div>
@@ -299,49 +317,62 @@ export default function BibliotecaView({ state, onStateChange }: BibliotecaViewP
         ) : (
           <div className="grid grid-cols-3 gap-3">
             {listBooks.map((book) => (
-              <button
+              <div
                 key={book.id}
-                onClick={() => {
-                  if (book.format === 'Digital') {
-                    handleToggleDigitalProgress(book, book.progressPercent !== 100);
-                  } else {
-                    setShowProgressModal(book);
-                    setInputPage(book.currentPage.toString());
-                  }
-                }}
-                className="bg-white rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-between text-center transition-all hover:border-slate-200 cursor-pointer shadow-xs"
+                className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-between text-center transition-all hover:border-slate-200 relative shadow-xs"
               >
-                <div className="w-16 h-24 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-100">
-                  <img 
-                    src={book.coverUrl} 
-                    alt={book.title} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="mt-3 w-full">
-                  <h4 className="text-[11px] font-black text-slate-800 truncate leading-tight">
-                    {book.title}
-                  </h4>
-                  <span className="text-[9px] text-slate-400 font-bold block truncate mt-0.5">
-                    {book.author}
-                  </span>
-                  <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1 py-0.2 rounded mt-1 inline-block">
-                    {book.format || 'Físico'}
-                  </span>
-                </div>
-                {book.progressPercent > 0 ? (
-                  <div className="w-full mt-2 space-y-1">
-                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${book.progressPercent}%` }} />
-                    </div>
-                    <span className="text-[8px] font-black text-slate-500 block">{book.progressPercent}%</span>
+                <button
+                  type="button"
+                  onClick={(e) => handleDeleteBook(book.id, e)}
+                  className="absolute top-1 right-1 p-1 bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-100 dark:hover:bg-red-950/60 rounded-full transition-colors z-10 shadow-xs cursor-pointer"
+                  title="Remover livro"
+                >
+                  <Trash2 className="w-2.5 h-2.5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (book.format === 'Digital') {
+                      handleToggleDigitalProgress(book, book.progressPercent !== 100);
+                    } else {
+                      setShowProgressModal(book);
+                      setInputPage(book.currentPage.toString());
+                    }
+                  }}
+                  className="w-full h-full flex flex-col items-center justify-between text-center cursor-pointer"
+                >
+                  <div className="w-16 h-24 rounded-lg overflow-hidden shadow-sm bg-slate-50 border border-slate-100">
+                    <img 
+                      src={book.coverUrl} 
+                      alt={book.title} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                ) : (
-                  <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                    {book.format === 'Digital' ? 'Concluir' : 'Começar'}
-                  </span>
-                )}
-              </button>
+                  <div className="mt-3 w-full">
+                    <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-100 truncate leading-tight">
+                      {book.title}
+                    </h4>
+                    <span className="text-[9px] text-slate-400 font-bold block truncate mt-0.5">
+                      {book.author}
+                    </span>
+                    <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1 py-0.2 rounded mt-1 inline-block">
+                      {book.format || 'Físico'}
+                    </span>
+                  </div>
+                  {book.progressPercent > 0 ? (
+                    <div className="w-full mt-2 space-y-1">
+                      <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 rounded-full" style={{ width: `${book.progressPercent}%` }} />
+                      </div>
+                      <span className="text-[8px] font-black text-slate-500 block">{book.progressPercent}%</span>
+                    </div>
+                  ) : (
+                    <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+                      {book.format === 'Digital' ? 'Concluir' : 'Começar'}
+                    </span>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -486,26 +517,26 @@ export default function BibliotecaView({ state, onStateChange }: BibliotecaViewP
       {/* UPDATE READING PROGRESS MODAL */}
       {showProgressModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-              <h3 className="text-sm font-extrabold text-slate-800">Registrar página lida</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+              <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Registrar página lida</h3>
               <button 
                 onClick={() => setShowProgressModal(null)}
-                className="p-1 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-400 cursor-pointer"
+                className="p-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-400 dark:text-slate-300 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             <div className="space-y-1 text-center">
-              <span className="text-xs text-slate-400 font-bold uppercase">Lendo Agora</span>
-              <h4 className="text-base font-black text-slate-800 leading-tight">{showProgressModal.title}</h4>
-              <p className="text-xs text-slate-500 font-medium">De 0 a {showProgressModal.totalPages} páginas</p>
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">Lendo Agora</span>
+              <h4 className="text-base font-black text-slate-800 dark:text-slate-100 leading-tight">{showProgressModal.title}</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">De 0 a {showProgressModal.totalPages} páginas</p>
             </div>
 
             <form onSubmit={handleUpdateProgress} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 ml-1">Página Atual</label>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">Página Atual</label>
                 <input
                   type="number"
                   min="0"
@@ -513,7 +544,7 @@ export default function BibliotecaView({ state, onStateChange }: BibliotecaViewP
                   placeholder={`Estou na página... (Ex: ${showProgressModal.currentPage})`}
                   value={inputPage}
                   onChange={(e) => setInputPage(e.target.value)}
-                  className="w-full bg-slate-50 border border-transparent focus:border-blue-600 focus:bg-white rounded-xl px-4 py-3.5 text-center font-bold focus:outline-none transition-all text-base"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 rounded-xl px-4 py-3.5 text-center font-bold focus:outline-none transition-all text-base text-slate-800 dark:text-slate-100"
                 />
               </div>
 

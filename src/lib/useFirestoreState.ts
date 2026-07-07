@@ -53,9 +53,10 @@ export function useFirestoreState() {
           currentUser.displayName || currentUser.email?.split('@')[0] || 'Novo Usuário'
         );
         
-        // Auto-link inviter as contact if exists in localStorage
+        // Auto-link inviter as contact if exists in localStorage (excluding self-invite)
         const invitedBy = localStorage.getItem('vyn_invited_by');
-        if (invitedBy) {
+        const currentUserName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Novo Usuário';
+        if (invitedBy && invitedBy.toLowerCase() !== currentUserName.toLowerCase()) {
           const inviterContact = {
             id: 'inviter-' + Date.now(),
             name: invitedBy,

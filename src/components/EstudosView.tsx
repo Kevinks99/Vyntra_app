@@ -427,13 +427,13 @@ export default function EstudosView({ state, onStateChange }: EstudosViewProps) 
 
       {/* CREATE COURSE DRAWER MODAL */}
       {showAddCourse && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 animate-fade-in">
-          <div className="bg-white w-full max-w-md rounded-t-[32px] p-6 space-y-5 animate-slide-up shadow-xl">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-extrabold text-slate-800">Registrar Novo Curso</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 space-y-5 animate-slide-up shadow-xl max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-extrabold text-slate-800 dark:text-slate-100">Registrar Novo Curso</h3>
               <button 
                 onClick={() => setShowAddCourse(false)}
-                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 cursor-pointer"
+                className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -441,37 +441,37 @@ export default function EstudosView({ state, onStateChange }: EstudosViewProps) 
 
             <form onSubmit={handleCreateCourse} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 ml-1">Título do Curso</label>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">Título do Curso</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Economia Comportamental"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-slate-50 border border-transparent focus:border-blue-600 focus:bg-white rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all text-slate-800 dark:text-slate-100"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 ml-1">Instrutor / Professor</label>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">Instrutor / Professor</label>
                 <input
                   type="text"
                   required
                   placeholder="Ex: Prof. Richard Thaler"
                   value={newInstructor}
                   onChange={(e) => setNewInstructor(e.target.value)}
-                  className="w-full bg-slate-50 border border-transparent focus:border-blue-600 focus:bg-white rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all text-slate-800 dark:text-slate-100"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 ml-1">Link do Curso (URL)</label>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 ml-1">Link do Curso (URL)</label>
                 <input
                   type="url"
                   placeholder="Ex: https://www.coursera.org/..."
                   value={newLinkUrl}
                   onChange={(e) => setNewLinkUrl(e.target.value)}
-                  className="w-full bg-slate-50 border border-transparent focus:border-blue-600 focus:bg-white rounded-xl px-4 py-3 text-sm focus:outline-none transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 rounded-xl px-4 py-3 text-sm focus:outline-none transition-all text-slate-800 dark:text-slate-100"
                 />
               </div>
 

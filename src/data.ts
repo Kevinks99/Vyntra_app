@@ -11,6 +11,7 @@ export const INITIAL_STATE: AppState = {
     avatarWeightUrl: '' as any,
     avatarNutritionUrl: '',
     streakDays: 0,
+    height: 175,
   },
   waterIntakeCups: 0,
   waterIntakeGoalCups: 8,
@@ -38,7 +39,51 @@ export const INITIAL_STATE: AppState = {
   recentActivities: [],
   notificationsEnabled: false,
   biometricsEnabled: false,
-  contacts: []
+  locationEnabled: false,
+  contacts: [],
+  notifications: [
+    {
+      id: 'notif-1',
+      category: 'vyn',
+      source: 'VYN AI INSIGHT',
+      time: 'Agora',
+      title: 'Janela de Foco Otimizada',
+      description: 'Sua noite de sono atingiu ótima qualidade. Vyn AI calculou que sua janela de foco cognitivo ideal hoje será às 09:00.',
+      read: false,
+    },
+    {
+      id: 'notif-2',
+      category: 'saude',
+      source: 'LEMBRETE DE SAÚDE',
+      time: '15m atrás',
+      title: 'Beber Água',
+      description: 'Mantenha-se hidratado! Hora de beber mais um copo (250ml) de água para atingir sua meta.',
+      read: false,
+      actionType: 'water',
+      actionLabel: 'Registrar Copo',
+    },
+    {
+      id: 'notif-3',
+      category: 'produtividade',
+      source: 'PRODUTIVIDADE',
+      time: '45m atrás',
+      title: 'Reunião de Design',
+      description: 'Sua reunião de alinhamento está agendada para começar em breve. Prepare seu material!',
+      read: false,
+      actionType: 'meet',
+      actionLabel: 'Join Meet',
+      metaData: { link: 'https://meet.google.com/vyn-tra-meet' }
+    },
+    {
+      id: 'notif-4',
+      category: 'conquista',
+      source: 'CONQUISTA',
+      time: '2h atrás',
+      title: 'Consistência Imbatível!',
+      description: 'Parabéns! Você está com uma sequência ativa de dias saudáveis e focados registrados no Vyntra.',
+      read: true,
+    }
+  ]
 };
 
 export const getCleanInitialState = (name: string): AppState => ({
@@ -52,6 +97,7 @@ export const getCleanInitialState = (name: string): AppState => ({
     avatarWeightUrl: '',
     avatarNutritionUrl: '',
     streakDays: 0,
+    height: 175,
   },
   waterIntakeCups: 0,
   waterIntakeGoalCups: 8,
@@ -79,5 +125,49 @@ export const getCleanInitialState = (name: string): AppState => ({
   recentActivities: [],
   notificationsEnabled: false,
   biometricsEnabled: false,
-  contacts: []
+  locationEnabled: false,
+  contacts: [],
+  notifications: [
+    {
+      id: 'notif-1',
+      category: 'vyn',
+      source: 'VYN AI INSIGHT',
+      time: 'Agora',
+      title: 'Janela de Foco Otimizada',
+      description: 'Sua noite de sono atingiu ótima qualidade. Vyn AI calculou que sua janela de foco cognitivo ideal hoje será às 09:00.',
+      read: false,
+    },
+    {
+      id: 'notif-2',
+      category: 'saude',
+      source: 'LEMBRETE DE SAÚDE',
+      time: '15m atrás',
+      title: 'Beber Água',
+      description: 'Mantenha-se hidratado! Hora de beber mais um copo (250ml) de água para atingir sua meta.',
+      read: false,
+      actionType: 'water',
+      actionLabel: 'Registrar Copo',
+    },
+    {
+      id: 'notif-3',
+      category: 'produtividade',
+      source: 'PRODUTIVIDADE',
+      time: '45m atrás',
+      title: 'Reunião de Design',
+      description: 'Sua reunião de alinhamento está agendada para começar em breve. Prepare seu material!',
+      read: false,
+      actionType: 'meet',
+      actionLabel: 'Join Meet',
+      metaData: { link: 'https://meet.google.com/vyn-tra-meet' }
+    },
+    {
+      id: 'notif-4',
+      category: 'conquista',
+      source: 'CONQUISTA',
+      time: '2h atrás',
+      title: 'Consistência Imbatível!',
+      description: 'Parabéns! Você está com uma sequência ativa de dias saudáveis e focados registrados no Vyntra.',
+      read: true,
+    }
+  ]
 });

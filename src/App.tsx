@@ -15,6 +15,7 @@ import RankingView from './components/RankingView';
 import EstudosView from './components/EstudosView';
 import BibliotecaView from './components/BibliotecaView';
 import AssistantView from './components/AssistantView';
+import NotificationsView from './components/NotificationsView';
 
 import { logout as firebaseLogout } from './lib/firebase';
 import { useFirestoreState } from './lib/useFirestoreState';
@@ -126,6 +127,9 @@ export default function App() {
       const currentMinutesStr = String(now.getMinutes()).padStart(2, '0');
       const currentTimeStr = `${currentHoursStr}:${currentMinutesStr}`;
 
+      let stateUpdated = false;
+      let nextNotifications = [...(state.notifications || [])];
+
       state.agendaEvents.forEach((event) => {
         if (!event.alertEnabled) return;
         if (event.dateString !== currentDateStr) return;
@@ -139,7 +143,7 @@ export default function App() {
         const is15MinMatch = (eventMinutesTotal - 15) === currentMinutesTotal;
 
         if (isExactMatch || is15MinMatch) {
-          const uniqueNotifId = `${event.id}-${isExactMatch ? 'exact' : '15m'}`;
+          const uniqueNotifId = `agenda-alert-${event.id}-${isExactMatch ? 'exact' : '15m'}`;
           
           if (!notifiedEventsRef.current.has(uniqueNotifId)) {
             notifiedEventsRef.current.add(uniqueNotifId);
@@ -166,13 +170,38 @@ export default function App() {
                 console.error("Browser notification failed:", e);
               }
             }
+
+            // Create a real database notification linked to this calendar alert
+            const exists = nextNotifications.some(n => n.id === uniqueNotifId);
+            if (!exists) {
+              const newNotifItem: any = {
+                id: uniqueNotifId,
+                category: 'produtividade',
+                source: 'AGENDA VYNTRA',
+                time: 'Agora',
+                title: event.title,
+                description: message,
+                read: false,
+                actionType: 'agenda',
+                actionLabel: 'Ver Agenda'
+              };
+              nextNotifications = [newNotifItem, ...nextNotifications];
+              stateUpdated = true;
+            }
           }
         }
       });
+
+      if (stateUpdated) {
+        handleStateChange({
+          ...state,
+          notifications: nextNotifications
+        });
+      }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [state?.agendaEvents]);
+  }, [state?.agendaEvents, state?.notificationsEnabled, state?.notifications]);
 
   // Handle auto-navigation on login status change
   useEffect(() => {
@@ -222,7 +251,7 @@ export default function App() {
   // Helper check to show premium bottom nav
   const showNav = [
     'dashboard', 'fitness', 'nutrition', 'sleep', 'weight', 'profile',
-    'agenda', 'ranking', 'estudos', 'biblioteca', 'assistant'
+    'agenda', 'ranking', 'estudos', 'biblioteca', 'assistant', 'notifications'
   ].includes(activeScreen);
 
   // Group of screens that falls under "Início" hub
@@ -325,6 +354,14 @@ export default function App() {
           <AssistantView 
             state={state} 
             onStateChange={handleStateChange} 
+          />
+        )}
+
+        {activeScreen === 'notifications' && (
+          <NotificationsView 
+            state={state} 
+            onStateChange={handleStateChange} 
+            onNavigate={setActiveScreen}
           />
         )}
 
