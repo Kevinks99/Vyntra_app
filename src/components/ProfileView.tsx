@@ -1,0 +1,541 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { User, MapPin, Award, LogOut, Check, Scale, Droplet, Sparkles, Image as ImageIcon, ShieldAlert, Moon, Sun, HelpCircle, Compass, Loader2, ChevronDown, BookOpen } from 'lucide-react';
+import { AppState } from '../types';
+import { getCleanInitialState } from '../data';
+
+interface ProfileViewProps {
+  state: AppState;
+  onStateChange: (newState: AppState, overwrite?: boolean) => void;
+  onLogout: () => void;
+}
+
+const AVATAR_POOL = [
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDzEsS18JVcfROhaddVaM8zWmZg1gBPube1uEVvvWEeKP9X3KZEg6_cuRHes2nCRQp1oD9YrtL1HY9nejHJDdJLzIahW2bz39CMHK-JrdjJnADMCocsd993rX0-MQifZRxZbOiVmlljtCiwerybuPp_U_QZgLFK4xI1ID6L_kbIVKrV0eI-ql64lnbtJG5Tj6E15254IzesjQJVzFCk9ux2Duf8BD9OfTmaS4V16orG6rWqaf1_GOGpbU9oFkNNBOXuwL2hG5utqGgr",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200&h=200",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&h=200",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200&h=200"
+];
+
+export default function ProfileView({ state, onStateChange, onLogout }: ProfileViewProps) {
+  const [name, setName] = useState(state.profile.name || '');
+  const [location, setLocation] = useState(state.profile.location || '');
+  const [temp, setTemp] = useState(state.profile.temperature || '');
+  const [weightGoal, setWeightGoal] = useState((state.weightGoal || 0).toString());
+  const [waterGoal, setWaterGoal] = useState((state.waterIntakeGoalCups || 8).toString());
+  
+  const [savedMsg, setSavedMsg] = useState(false);
+  const [showGalleryPermission, setShowGalleryPermission] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [activeInstruction, setActiveInstruction] = useState<number | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const handleResetData = () => {
+    const cleanState = getCleanInitialState(name || 'Usuário');
+    onStateChange(cleanState, true);
+    
+    setName(cleanState.profile.name);
+    setLocation(cleanState.profile.location);
+    setTemp(cleanState.profile.temperature);
+    setWeightGoal(cleanState.weightGoal.toString());
+    setWaterGoal(cleanState.waterIntakeGoalCups.toString());
+    
+    setShowResetConfirm(false);
+    setLocationError("Todos os dados do seu perfil foram limpos e reiniciados com sucesso!");
+    setTimeout(() => {
+      setLocationError(null);
+    }, 5000);
+  };
+
+  // Dark Mode State initialized from localStorage or body element class
+  const [isDark, setIsDark] = useState(() => {
+    return document.body.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+  });
+
+  const toggleDarkMode = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    if (nextDark) {
+      document.body.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const handleAutoLocate = async () => {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("Geolocalização não é suportada por seu navegador.");
+      return;
+    }
+    setLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+            { signal: controller.signal }
+          );
+          const geoData = await geoRes.json();
+          clearTimeout(timeoutId);
+          
+          const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.state || "Sua Localização";
+
+          const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+          );
+          const weatherData = await weatherRes.json();
+          const currentTemp = weatherData.current_weather?.temperature;
+
+          setLocation(city);
+          if (currentTemp !== undefined) {
+            setTemp(`${Math.round(currentTemp)}°C`);
+          }
+        } catch (err) {
+          console.error("Erro ao buscar dados de localização/clima:", err);
+          setLocationError("Não foi possível carregar os dados climáticos automaticamente. Digite sua cidade manualmente.");
+        } finally {
+          setLoadingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Erro ao obter geolocalização:", error);
+        setLoadingLocation(false);
+        if (error.code === 1) {
+          setLocationError("Permissão de localização negada pelo navegador. Ative as permissões ou insira manualmente.");
+        } else {
+          setLocationError("Não foi possível obter sua localização atual do GPS. Por favor, digite manualmente.");
+        }
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    onStateChange({
+      ...state,
+      weightGoal: parseFloat(weightGoal) || 70,
+      waterIntakeGoalCups: parseInt(waterGoal, 10) || 10,
+      profile: {
+        ...state.profile,
+        name: name,
+        location: location,
+        temperature: temp
+      }
+    });
+
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 3000);
+  };
+
+  const triggerGallerySelect = () => {
+    setShowGalleryPermission(true);
+  };
+
+  const handleGrantPermission = () => {
+    setShowGalleryPermission(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+      if (base64Url) {
+        onStateChange({
+          ...state,
+          profile: {
+            ...state.profile,
+            avatarUrl: base64Url
+          }
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto space-y-6 pb-24 animate-fade-in">
+      
+      {/* Hidden File Input for Native Photo Library */}
+      <input 
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* Page Header */}
+      <section className="space-y-0.5">
+        <h2 className="text-2xl font-bold tracking-tight text-on-surface">Meu Perfil</h2>
+        <p className="text-xs text-on-surface-variant font-medium">Ajustes & Desempenho Pessoal</p>
+      </section>
+
+      {savedMsg && (
+        <div className="bg-[#6cf8bb]/15 border border-[#006c49]/30 text-[#00714d] px-4 py-3 rounded-xl text-xs font-semibold animate-fade-in flex items-center gap-2">
+          <Check className="w-4 h-4" /> Configurações salvas e sincronizadas com sucesso!
+        </div>
+      )}
+
+      {/* Profile Overview Card with Avatar cycling */}
+      <section className="glass-card p-6 rounded-[28px] flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <div className="absolute -top-12 -left-12 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
+        
+        {/* Avatar element */}
+        <div className="relative group">
+          <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary/20 shadow-md bg-slate-50">
+            {state.profile.avatarUrl ? (
+              <img 
+                src={state.profile.avatarUrl} 
+                alt={state.profile.name || "Perfil"} 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                <User className="w-10 h-10" />
+              </div>
+            )}
+          </div>
+          <button 
+            type="button"
+            onClick={triggerGallerySelect}
+            className="absolute bottom-0 right-0 p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 active:scale-90 transition-all cursor-pointer shadow-md"
+            title="Escolher Foto da Galeria"
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-1">
+          <h3 className="text-lg font-bold text-on-surface">{state.profile.name || 'Nova Conta'}</h3>
+          <p className="text-xs text-on-surface-variant font-medium flex items-center justify-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-primary" /> {state.profile.location || 'Sem Localização'}
+          </p>
+        </div>
+
+        {/* Dynamic Premium Level Calculator */}
+        {(() => {
+          const getPremiumLevel = (streak: number) => {
+            if (streak < 3) {
+              return { name: "Novato", next: "Bronze", target: 3, diff: 3 - streak };
+            } else if (streak < 7) {
+              return { name: "Bronze", next: "Prata", target: 7, diff: 7 - streak };
+            } else if (streak < 15) {
+              return { name: "Prata", next: "Ouro", target: 15, diff: 15 - streak };
+            } else if (streak < 30) {
+              return { name: "Ouro", next: "Elite", target: 30, diff: 30 - streak };
+            } else {
+              return { name: "Elite", next: null, target: 30, diff: 0 };
+            }
+          };
+          const levelInfo = getPremiumLevel(state.profile.streakDays || 0);
+
+          return (
+            <div className="w-full mt-6 space-y-4 border-t border-[#c3c6d7]/30 pt-4">
+              <div className="flex gap-6 w-full justify-around">
+                <div>
+                  <span className="text-[9px] font-bold text-[#737686] uppercase block">Dias Ativos</span>
+                  <span className="text-lg font-extrabold text-on-surface flex items-center gap-1 justify-center mt-0.5">
+                    🔥 {state.profile.streakDays || 0}
+                  </span>
+                </div>
+                <div className="w-[1px] bg-[#c3c6d7]/20" />
+                <div>
+                  <span className="text-[9px] font-bold text-[#737686] uppercase block">Nível Premium</span>
+                  <span className="text-lg font-extrabold text-primary flex items-center gap-1 justify-center mt-0.5">
+                    <Award className="w-4 h-4 text-primary" /> {levelInfo.name}
+                  </span>
+                </div>
+              </div>
+
+              {/* level progression guide */}
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100/50 p-2.5 rounded-2xl text-[10px] font-bold text-slate-500 text-center leading-normal">
+                {levelInfo.next ? (
+                  <span>
+                    Próxima Meta: Alcance <span className="text-blue-600 font-extrabold">{levelInfo.target} dias ativos</span> para subir ao nível <span className="text-blue-600 font-extrabold">{levelInfo.next}</span> (faltam {levelInfo.diff} dias ativos).
+                  </span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    👑 Parabéns! Você atingiu o nível máximo de **Elite** no Vyntra!
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </section>
+
+      {/* Edit Form */}
+      <form onSubmit={handleSaveSettings} className="glass-card p-6 rounded-[28px] space-y-4">
+        <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2">
+          Editar Dados Cadastrais
+        </h4>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-[#434655] ml-1">Nome de Exibição</label>
+          <input 
+            type="text" 
+            placeholder="Seu nome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1">Cidade</label>
+            <input 
+              type="text" 
+              placeholder="Ex: São Paulo"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1">Temperatura</label>
+            <input 
+              type="text" 
+              placeholder="Ex: 24°C"
+              value={temp}
+              onChange={(e) => setTemp(e.target.value)}
+              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Automatic location & weather retrieval */}
+        <button
+          type="button"
+          onClick={handleAutoLocate}
+          disabled={loadingLocation}
+          className="w-full h-11 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-transparent"
+        >
+          {loadingLocation ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> Localizando & Buscando Clima...
+            </>
+          ) : (
+            <>
+              <Compass className="w-4 h-4 text-blue-600" /> Detectar Localidade & Clima (Auto)
+            </>
+          )}
+        </button>
+
+        {locationError && (
+          <div className="text-red-500 bg-red-50 dark:bg-red-950/20 dark:text-red-400 border border-red-100 dark:border-red-900/30 text-[11px] font-bold p-3 rounded-xl animate-fade-in text-center leading-normal">
+            {locationError}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
+              <Scale className="w-3.5 h-3.5 text-outline" /> Meta Peso (kg)
+            </label>
+            <input 
+              type="number" 
+              step="0.1"
+              value={weightGoal}
+              onChange={(e) => setWeightGoal(e.target.value)}
+              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
+              <Droplet className="w-3.5 h-3.5 text-outline" /> Hidratação (copos)
+            </label>
+            <input 
+              type="number" 
+              value={waterGoal}
+              onChange={(e) => setWaterGoal(e.target.value)}
+              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <button 
+          type="submit"
+          className="w-full bg-[#2563eb] text-white py-3.5 rounded-xl font-bold hover:opacity-95 active:scale-95 transition-all cursor-pointer text-sm"
+        >
+          Salvar Alterações
+        </button>
+      </form>
+
+      {/* Visuais Preference Section (Dark Mode) */}
+      <section className="glass-card p-6 rounded-[28px] space-y-4">
+        <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2 flex items-center gap-1.5">
+          <Sun className="w-4 h-4 text-amber-500" /> Preferências Visuais
+        </h4>
+        <div className="flex items-center justify-between">
+          <div>
+            <h5 className="text-sm font-bold text-slate-800">Modo Escuro / Dark Mode</h5>
+            <p className="text-[11px] text-slate-500 font-medium">Ativa o visual de alto contraste escuro no app</p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none cursor-pointer ${isDark ? 'bg-blue-600' : 'bg-slate-200'}`}
+          >
+            <div className={`w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 flex items-center justify-center ${isDark ? 'translate-x-6' : 'translate-x-0'}`}>
+              {isDark ? <Moon className="w-3.5 h-3.5 text-blue-600" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
+            </div>
+          </button>
+        </div>
+      </section>
+
+      {/* App Instructions Accordion */}
+      <section className="glass-card p-6 rounded-[28px] space-y-4">
+        <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2 flex items-center gap-1.5">
+          <HelpCircle className="w-4 h-4 text-blue-600" /> Instruções do Aplicativo
+        </h4>
+        <div className="space-y-2.5">
+          {[
+            {
+              q: "Como registrar meus treinos personalizados?",
+              a: "Na aba Treinos, clique em 'Registrar Novo Treino'. Você pode selecionar categorias pré-definidas (Musculação, Corrida, Funcional) ou digitar um esporte personalizado de sua preferência como Futevôlei, Natação ou Surf."
+            },
+            {
+              q: "Como gerenciar meus cursos e progresso?",
+              a: "Na aba Estudos, cadastre os cursos que está realizando informando o título, instrutor e o link URL do curso. Use o botão 'Estudar' para abrir o link diretamente, e o botão 'Avançar +5%' ou 'Terminar Curso' para enviar ao histórico de concluintes."
+            },
+            {
+              q: "Como configurar os alertas e notificações?",
+              a: "Na aba Calendário, clique no ícone do sino de notificações. O sistema solicitará permissão do dispositivo para emitir alertas e notificações das suas programações registradas."
+            },
+            {
+              q: "Como conectar com contatos no Ranking?",
+              a: "Na aba Ranking, você verá sua posição baseada nos seus treinos, hidratação e estudos semanais. É possível convidar novos contatos por e-mail/nome na barra de busca superior para competir de forma saudável."
+            },
+            {
+              q: "Como registrar minha hidratação diária?",
+              a: "Na aba Saúde > Alimentação, o bloco de Hidratação exibe o progresso de copos de água consumidos. Clique no botão de adicionar copos para atualizar em tempo real, acompanhando a animação fluida da água subindo."
+            }
+          ].map((item, idx) => {
+            const isOpen = activeInstruction === idx;
+            return (
+              <div key={idx} className="border-b border-slate-100 last:border-b-0 pb-2 last:pb-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveInstruction(isOpen ? null : idx)}
+                  className="w-full flex items-center justify-between text-left py-1 text-xs font-bold text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
+                >
+                  <span>{item.q}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpen && (
+                  <p className="mt-1 text-[11px] text-slate-500 leading-relaxed pl-1 font-medium animate-fade-in">
+                    {item.a}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* GALLERY PERMISSION DIALOG MODAL */}
+      {showGalleryPermission && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center space-y-4 shadow-xl">
+            <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <ImageIcon className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-base text-slate-800">Acesso à Galeria</h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                Este aplicativo requer sua permissão para acessar suas fotos e carregar uma imagem de perfil personalizada. Deseja permitir o acesso?
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowGalleryPermission(false)}
+                className="py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-xs cursor-pointer transition-all"
+              >
+                Recusar
+              </button>
+              <button
+                type="button"
+                onClick={handleGrantPermission}
+                className="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs cursor-pointer transition-all"
+              >
+                Permitir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Database/Data Card */}
+      <section className="glass-card p-6 rounded-[28px] border border-[#ffdad6]/30 space-y-4">
+        <h4 className="text-xs font-bold text-[#ba1a1a] uppercase tracking-widest border-b border-[#ffdad6]/20 pb-2 mb-2 flex items-center gap-1.5">
+          <ShieldAlert className="w-4 h-4" /> Manutenção de Dados
+        </h4>
+        
+        {!showResetConfirm ? (
+          <div className="space-y-3">
+            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+              Deseja zerar todas as informações cadastradas (metas de peso, água, treinos registrados, cursos e histórico) e começar totalmente do zero?
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(true)}
+              className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-[#ba1a1a] border border-red-200/50 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Zerar e Limpar Todos os Dados
+            </button>
+          </div>
+        ) : (
+          <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100/80 space-y-3 animate-fade-in">
+            <p className="text-xs font-bold text-[#ba1a1a] text-center leading-normal">
+              ⚠️ Tem certeza absoluta? Essa ação apagará de forma irreversível todo o seu progresso do banco de dados!
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleResetData}
+                className="py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+              >
+                Sim, Limpar Tudo
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Logout Action Button */}
+      <button 
+        onClick={onLogout}
+        className="w-full bg-white border border-[#ffdad6] text-[#ba1a1a] py-3.5 rounded-xl font-bold hover:bg-[#ffdad6]/20 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer text-sm"
+      >
+        <LogOut className="w-4 h-4" /> Sair da Conta
+      </button>
+    </div>
+  );
+}
+

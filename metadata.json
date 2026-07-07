@@ -1,0 +1,6 @@
+{
+  "name": "Vyntra",
+  "description": "O Sistema Operacional da Sua Vida. Monitore sua saúde, hábitos, sono, exercícios e alimentação em uma interface minimalista e de alta performance.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

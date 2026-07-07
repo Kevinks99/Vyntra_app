@@ -1,0 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-primary: #2563eb;
+  --color-secondary: #006c49;
+  --color-tertiary: #6a1edb;
+  --color-surface: #faf8ff;
+  --color-on-surface: #191b23;
+  --color-outline: #5d5f6f;
+  --color-outline-variant: #c3c6d7;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #faf8ff;
+  color: #191b23;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark {
+  background-color: #0f111a;
+  color: #f3f4f6;
+}
+
+/* Glassmorphic Cards & Panels matching Vyntra guidelines */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.dark .glass-card {
+  background: rgba(25, 27, 35, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom shadow effects matching the design specs */
+.premium-shadow {
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.blue-glow {
+  box-shadow: 0 0 40px rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+.purple-glow {
+  box-shadow: 0 0 40px rgba(131, 67, 244, 0.15);
+  border: 1px solid rgba(131, 67, 244, 0.2);
+}
+
+.green-glow {
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.orange-glow {
+  box-shadow: 0px 20px 40px rgba(249, 115, 22, 0.12);
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Comprehensive CSS Dark Mode Overrides */
+body.dark {
+  background-color: #0c0e17 !important;
+  color: #f3f4f6 !important;
+}
+
+body.dark main,
+body.dark #assistant-view-root {
+  background-color: #0c0e17;
+}
+
+body.dark nav {
+  background-color: rgba(17, 24, 39, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark .bg-white {
+  background-color: #161b2a !important; /* Premium dark blue-slate */
+}
+
+body.dark .bg-slate-50,
+body.dark .bg-slate-100,
+body.dark .bg-slate-200 {
+  background-color: #1e2538 !important; /* Slightly lighter slate for contrast */
+}
+
+/* Explicit class-based color safety for dark mode */
+body.dark h1, 
+body.dark h2, 
+body.dark h3, 
+body.dark h4, 
+body.dark h5, 
+body.dark h6 {
+  color: #ffffff !important;
+}
+
+body.dark .text-slate-950,
+body.dark .text-slate-900,
+body.dark .text-slate-800,
+body.dark .text-slate-700,
+body.dark .text-[#191b23],
+body.dark .text-on-surface {
+  color: #f3f4f6 !important;
+}
+
+body.dark .text-slate-600,
+body.dark .text-[#434655],
+body.dark .text-on-surface-variant {
+  color: #d1d5db !important;
+}
+
+body.dark .text-slate-500,
+body.dark .text-[#737686],
+body.dark .text-outline {
+  color: #9ca3af !important;
+}
+
+body.dark .text-slate-400,
+body.dark .text-outline-variant {
+  color: #a1a5b7 !important;
+}
+
+body.dark .border-slate-50,
+body.dark .border-slate-100,
+body.dark .border-slate-200,
+body.dark .border-slate-100\/50 {
+  border-color: #232d43 !important; /* Subtle dark border */
+}
+
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background-color: #1e2538;
+  color: #ffffff;
+  border-color: #2f3b55;
+}
+
+body.dark input::placeholder {
+  color: #6b7280;
+}
+
+/* Color Safety Overrides for Category Cards/Text in Dark Mode */
+body.dark .text-purple-950,
+body.dark .text-purple-900,
+body.dark .text-purple-800,
+body.dark .text-purple-700 {
+  color: #f5f3ff !important;
+}
+
+body.dark .bg-purple-50\/40,
+body.dark .bg-purple-50,
+body.dark .bg-purple-100 {
+  background-color: #2e1065 !important;
+}
+
+body.dark .text-emerald-950,
+body.dark .text-emerald-900,
+body.dark .text-emerald-800,
+body.dark .text-emerald-700 {
+  color: #ecfdf5 !important;
+}
+
+body.dark .bg-emerald-50\/30,
+body.dark .bg-emerald-50,
+body.dark .bg-emerald-100 {
+  background-color: #064e3b !important;
+}
+
+body.dark .text-blue-950,
+body.dark .text-blue-900,
+body.dark .text-blue-800,
+body.dark .text-blue-700,
+body.dark .text-indigo-950,
+body.dark .text-indigo-900,
+body.dark .text-indigo-800,
+body.dark .text-indigo-700 {
+  color: #eff6ff !important;
+}
+
+body.dark .bg-blue-50,
+body.dark .bg-blue-100 {
+  background-color: #1e3a8a !important;
+}
+
+body.dark .glass-card {
+  background: rgba(22, 27, 42, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

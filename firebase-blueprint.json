@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile metrics and performance data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "temperature": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "avatarFitnessUrl": { "type": "string" },
+        "avatarSleepUrl": { "type": "string" },
+        "avatarWeightUrl": { "type": "string" },
+        "avatarNutritionUrl": { "type": "string" },
+        "streakDays": { "type": "number" }
+      },
+      "required": ["name", "streakDays"]
+    },
+    "AppState": {
+      "title": "AppState",
+      "description": "Full application state tracking sleep, fitness, weight, and meals",
+      "type": "object",
+      "properties": {
+        "profile": { "type": "object" },
+        "waterIntakeCups": { "type": "number" },
+        "waterIntakeGoalCups": { "type": "number" },
+        "currentWeight": { "type": "number" },
+        "weightGoal": { "type": "number" },
+        "weightLogs": { "type": "array" },
+        "weightViewMode": { "type": "string" },
+        "meals": { "type": "array" },
+        "workouts": { "type": "array" },
+        "sleepScore": { "type": "number" },
+        "sleepGoalHours": { "type": "number" },
+        "bedTime": { "type": "string" },
+        "wakeTime": { "type": "string" },
+        "sleepLogs": { "type": "array" },
+        "dailyProgressPercentage": { "type": "number" },
+        "ringCalories": { "type": "number" },
+        "ringCaloriesGoal": { "type": "number" },
+        "ringMinutes": { "type": "number" },
+        "ringMinutesGoal": { "type": "number" },
+        "ringStand": { "type": "number" },
+        "ringStandGoal": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "AppState",
+      "description": "User performance tracking document"
+    }
+  }
+}
