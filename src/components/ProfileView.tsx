@@ -20,9 +20,7 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
   const [name, setName] = useState(state.profile.name || '');
   const [location, setLocation] = useState(state.profile.location || '');
   const [temp, setTemp] = useState(state.profile.temperature || '');
-  const [weightGoal, setWeightGoal] = useState((state.weightGoal || 0).toString());
-  const [waterGoal, setWaterGoal] = useState((state.waterIntakeGoalCups || 8).toString());
-  const [height, setHeight] = useState((state.profile.height || 175).toString());
+  const [birthDate, setBirthDate] = useState(state.profile.birthDate || '');
   
   const [savedMsg, setSavedMsg] = useState(false);
   const [showGalleryPermission, setShowGalleryPermission] = useState(false);
@@ -30,6 +28,7 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
   const [locationError, setLocationError] = useState<string | null>(null);
   const [activeInstruction, setActiveInstruction] = useState<number | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showLevelsModal, setShowLevelsModal] = useState(false);
 
   const handleResetData = () => {
     const cleanState = getCleanInitialState(name || 'Usuário');
@@ -38,9 +37,7 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
     setName(cleanState.profile.name);
     setLocation(cleanState.profile.location);
     setTemp(cleanState.profile.temperature);
-    setWeightGoal(cleanState.weightGoal.toString());
-    setWaterGoal(cleanState.waterIntakeGoalCups.toString());
-    setHeight((cleanState.profile.height || 175).toString());
+    setBirthDate(cleanState.profile.birthDate || '');
     
     setShowResetConfirm(false);
     setLocationError("Todos os dados do seu perfil foram limpos e reiniciados com sucesso!");
@@ -178,14 +175,12 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
     e.preventDefault();
     onStateChange({
       ...state,
-      weightGoal: parseFloat(weightGoal) || 70,
-      waterIntakeGoalCups: parseInt(waterGoal, 10) || 10,
       profile: {
         ...state.profile,
         name: name,
         location: location,
         temperature: temp,
-        height: parseInt(height, 10) || 175
+        birthDate: birthDate
       }
     });
 
@@ -288,16 +283,16 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
         {/* Dynamic Premium Level Calculator */}
         {(() => {
           const getPremiumLevel = (streak: number) => {
-            if (streak < 3) {
-              return { name: "Novato", next: "Bronze", target: 3, diff: 3 - streak };
-            } else if (streak < 7) {
-              return { name: "Bronze", next: "Prata", target: 7, diff: 7 - streak };
-            } else if (streak < 15) {
-              return { name: "Prata", next: "Ouro", target: 15, diff: 15 - streak };
+            if (streak < 7) {
+              return { name: "Novato", next: "Bronze", target: 7, diff: 7 - streak };
             } else if (streak < 30) {
-              return { name: "Ouro", next: "Elite", target: 30, diff: 30 - streak };
+              return { name: "Bronze", next: "Prata", target: 30, diff: 30 - streak };
+            } else if (streak < 60) {
+              return { name: "Prata", next: "Ouro", target: 60, diff: 60 - streak };
+            } else if (streak < 90) {
+              return { name: "Ouro", next: "Elite", target: 90, diff: 90 - streak };
             } else {
-              return { name: "Elite", next: null, target: 30, diff: 0 };
+              return { name: "Elite", next: null, target: 90, diff: 0 };
             }
           };
           const levelInfo = getPremiumLevel(state.profile.streakDays || 0);
@@ -313,10 +308,10 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
                 </div>
                 <div className="w-[1px] bg-[#c3c6d7]/20" />
                 <div>
-                  <span className="text-[9px] font-bold text-[#737686] uppercase block">Nível Premium</span>
-                  <span className="text-lg font-extrabold text-primary flex items-center gap-1 justify-center mt-0.5">
+                  <button onClick={() => setShowLevelsModal(true)} className="text-[9px] font-bold text-[#737686] uppercase block hover:text-blue-600 transition-colors">Nível</button>
+                  <button onClick={() => setShowLevelsModal(true)} className="text-lg font-extrabold text-primary flex items-center gap-1 justify-center mt-0.5 hover:opacity-80 transition-opacity">
                     <Award className="w-4 h-4 text-primary" /> {levelInfo.name}
-                  </span>
+                  </button>
                 </div>
               </div>
 
@@ -350,6 +345,17 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
             placeholder="Seu nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-[#434655] ml-1">Data de Nascimento</label>
+          <input 
+            type="date" 
+            placeholder="DD/MM/AAAA"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
             className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
           />
         </div>
@@ -389,44 +395,6 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
             </div>
           );
         })()}
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
-              <Scale className="w-3.5 h-3.5 text-outline" /> Meta Peso (kg)
-            </label>
-            <input 
-              type="number" 
-              step="0.1"
-              value={weightGoal}
-              onChange={(e) => setWeightGoal(e.target.value)}
-              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
-              <Droplet className="w-3.5 h-3.5 text-outline" /> Hidratação (copos)
-            </label>
-            <input 
-              type="number" 
-              value={waterGoal}
-              onChange={(e) => setWaterGoal(e.target.value)}
-              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">
-              <Ruler className="w-3.5 h-3.5 text-outline" /> Altura (cm)
-            </label>
-            <input 
-              type="number" 
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-              placeholder="175"
-              className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all"
-            />
-          </div>
-        </div>
 
         <button 
           type="submit"
@@ -589,7 +557,54 @@ export default function ProfileView({ state, onStateChange, onLogout }: ProfileV
         </div>
       )}
 
+      {/* Levels Progress Modal */}
+      {showLevelsModal && (
+        <div 
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[10000] animate-fade-in"
+          onClick={() => setShowLevelsModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="font-extrabold text-lg text-slate-800 dark:text-slate-100">Progressão de Nível</h3>
+              <button 
+                onClick={() => setShowLevelsModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Dias ativos são contados a partir da sua sequência diária de metas cumpridas (treinos, hidratação e peso). Mantenha a constância para subir de nível!
+            </p>
+            <div className="space-y-3">
+              {[
+                { name: "Novato", min: 0 },
+                { name: "Bronze", min: 7 },
+                { name: "Prata", min: 30 },
+                { name: "Ouro", min: 60 },
+                { name: "Elite", min: 90 }
+              ].map((level) => (
+                <div key={level.name} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{level.name}</span>
+                  <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">{level.min}+ dias ativos</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowLevelsModal(false)}
+              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-sm hover:bg-blue-700 transition-all cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Reset Database/Data Card */}
+
       <section className="glass-card p-6 rounded-[28px] border border-[#ffdad6]/30 space-y-4">
         <h4 className="text-xs font-bold text-[#ba1a1a] uppercase tracking-widest border-b border-[#ffdad6]/20 pb-2 mb-2 flex items-center gap-1.5">
           <ShieldAlert className="w-4 h-4" /> Manutenção de Dados

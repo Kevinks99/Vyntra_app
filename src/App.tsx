@@ -52,18 +52,18 @@ export default function App() {
 
   // Monitor pending invite and prompt user to accept once logged in
   useEffect(() => {
-    if (!currentUser || !state?.profile?.name) return;
+    if (!currentUser || authLoading) return;
     const invitedBy = localStorage.getItem('vyn_invited_by');
     if (!invitedBy) return;
 
     // Don't invite yourself
-    if (invitedBy.toLowerCase() === state.profile.name.toLowerCase()) {
+    if (state?.profile?.name && invitedBy.toLowerCase() === state.profile.name.toLowerCase()) {
       localStorage.removeItem('vyn_invited_by');
       return;
     }
 
     // Check if already in contacts
-    const contacts = state.contacts || [];
+    const contacts = state?.contacts || [];
     const alreadyFriend = contacts.some(
       (c) => c.name.toLowerCase() === invitedBy.toLowerCase()
     );
@@ -73,7 +73,7 @@ export default function App() {
     } else {
       localStorage.removeItem('vyn_invited_by');
     }
-  }, [currentUser, state?.profile?.name, state?.contacts]);
+  }, [currentUser, authLoading, state?.profile?.name, state?.contacts]);
 
   const handleAcceptInvite = () => {
     if (!pendingInvite || !state) return;
@@ -95,15 +95,17 @@ export default function App() {
     localStorage.removeItem('vyn_invited_by');
     setPendingInvite(null);
 
+    // Remove invite param from URL to prevent re-triggering
+    const url = new URL(window.location.href);
+    url.searchParams.delete('invite');
+    window.history.replaceState({}, '', url.toString());
+
     // Show beautiful toast
     setToast({
       id: 'invite-accepted-' + Date.now(),
       title: "Convite Aceito!",
       message: `Você agora está conectado com ${pendingInvite}! Vocês disputarão a consistência semanal juntos.`
     });
-
-    // Navigate to ranking so they can see their friend instantly
-    setActiveScreen('ranking');
   };
 
   const handleDeclineInvite = () => {
@@ -202,6 +204,102 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, [state?.agendaEvents, state?.notificationsEnabled, state?.notifications]);
+
+  // Recalculate streak globally based on real consecutive active days
+  useEffect(() => {
+    if (!state || !state.profile) return;
+    
+    const activeDates = new Set<string>();
+
+    if (state.workouts) {
+      state.workouts.forEach(w => {
+        if (w.dateString) activeDates.add(w.dateString);
+      });
+    }
+
+    if (state.agendaEvents) {
+      state.agendaEvents.forEach(e => {
+        if (e.dateString) activeDates.add(e.dateString);
+      });
+    }
+
+    if (state.sleepLogs) {
+      state.sleepLogs.forEach(s => {
+        if (s.dateString) activeDates.add(s.dateString);
+      });
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (state.meals && state.meals.length > 0) {
+      state.meals.forEach(m => {
+        if (m.completed) {
+          activeDates.add(m.dateString || todayStr);
+        }
+      });
+    }
+
+    if (state.waterIntakeCups >= state.waterIntakeGoalCups) {
+      activeDates.add(todayStr);
+    }
+
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    let streak = 0;
+    if (activeDates.size > 0) {
+      let checkDate = new Date();
+      const todayActive = activeDates.has(formatDate(checkDate));
+      
+      if (todayActive) {
+        while (true) {
+          const dateStr = formatDate(checkDate);
+          if (activeDates.has(dateStr)) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      } else {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (activeDates.has(formatDate(yesterday))) {
+          checkDate = yesterday;
+          while (true) {
+            const dateStr = formatDate(checkDate);
+            if (activeDates.has(dateStr)) {
+              streak++;
+              checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (state.profile.streakDays !== streak) {
+      handleStateChange({
+        ...state,
+        profile: {
+          ...state.profile,
+          streakDays: streak
+        }
+      });
+    }
+  }, [
+    state?.workouts, 
+    state?.agendaEvents, 
+    state?.sleepLogs, 
+    state?.meals, 
+    state?.waterIntakeCups, 
+    state?.waterIntakeGoalCups, 
+    state?.profile?.streakDays
+  ]);
 
   // Handle auto-navigation on login status change
   useEffect(() => {

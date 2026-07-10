@@ -70,11 +70,13 @@ const CustomTooltip = ({ active, payload, label, heightMeters }: CustomTooltipPr
 
 export default function WeightView({ state, onStateChange }: WeightViewProps) {
   const [showModal, setShowModal] = useState(false);
-  const [newWeight, setNewWeight] = useState('74.2');
+  const [newWeight, setNewWeight] = useState(state.currentWeight?.toString() || '74.2');
   const [viewMode, setViewMode] = useState<'weekly' | 'monthly'>('weekly');
   const [showHeightModal, setShowHeightModal] = useState(false);
   const [tempHeightOnly, setTempHeightOnly] = useState((state.profile.height || 175).toString());
   const [newHeightInput, setNewHeightInput] = useState((state.profile.height || 175).toString());
+  const [weightGoal, setWeightGoal] = useState((state.weightGoal || 70).toString());
+  const [waterGoal, setWaterGoal] = useState((state.waterIntakeGoalCups || 8).toString());
 
   // Synchronize state heights when profile changes
   useEffect(() => {
@@ -113,6 +115,8 @@ export default function WeightView({ state, onStateChange }: WeightViewProps) {
       ...state,
       currentWeight: weightNum,
       weightLogs: updatedLogs,
+      weightGoal: parseFloat(weightGoal) || 70,
+      waterIntakeGoalCups: parseInt(waterGoal, 10) || 8,
       profile: {
         ...state.profile,
         height: isNaN(heightNum) ? state.profile.height : heightNum
@@ -461,6 +465,34 @@ export default function WeightView({ state, onStateChange }: WeightViewProps) {
                     className="w-full bg-[#f3f4f6] border border-transparent focus:border-primary rounded-xl px-4 py-3 text-sm text-on-surface focus:bg-white focus:outline-none transition-all pr-12"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#737686]">CM</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#434655] tracking-wide block ml-1">
+                    Meta Peso (kg)
+                  </label>
+                  <input 
+                    type="number"
+                    step="0.1"
+                    required
+                    value={weightGoal}
+                    onChange={(e) => setWeightGoal(e.target.value)}
+                    className="w-full bg-[#f3f4f6] border border-transparent focus:border-primary rounded-xl px-4 py-3 text-sm text-on-surface focus:bg-white focus:outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#434655] tracking-wide block ml-1">
+                    Hidratação (copos)
+                  </label>
+                  <input 
+                    type="number"
+                    required
+                    value={waterGoal}
+                    onChange={(e) => setWaterGoal(e.target.value)}
+                    className="w-full bg-[#f3f4f6] border border-transparent focus:border-primary rounded-xl px-4 py-3 text-sm text-on-surface focus:bg-white focus:outline-none transition-all"
+                  />
                 </div>
               </div>
 

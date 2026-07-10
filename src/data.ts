@@ -98,6 +98,7 @@ export const getCleanInitialState = (name: string): AppState => ({
     avatarNutritionUrl: '',
     streakDays: 0,
     height: 175,
+    birthDate: '',
   },
   waterIntakeCups: 0,
   waterIntakeGoalCups: 8,

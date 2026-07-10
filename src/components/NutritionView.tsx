@@ -28,6 +28,22 @@ export default function NutritionView({ state, onStateChange, onNavigate }: Nutr
   const [mealFat, setMealFat] = useState('10');
   const [mealTime, setMealTime] = useState('14:00');
 
+  const [weightGoal, setWeightGoal] = useState((state.weightGoal || 70).toString());
+  const [height, setHeight] = useState((state.profile.height || 175).toString());
+  const [waterGoal, setWaterGoal] = useState((state.waterIntakeGoalCups || 8).toString());
+
+  const handleUpdateHealthGoals = () => {
+    onStateChange({
+      ...state,
+      weightGoal: parseFloat(weightGoal) || 70,
+      waterIntakeGoalCups: parseInt(waterGoal, 10) || 8,
+      profile: {
+        ...state.profile,
+        height: parseInt(height, 10) || 175
+      }
+    });
+  };
+
   // Toggle meal completion and recalculate calories consumed
   const handleToggleMeal = (id: string) => {
     const updatedMeals = state.meals.map(m => 
@@ -100,6 +116,30 @@ export default function NutritionView({ state, onStateChange, onNavigate }: Nutr
       <section className="space-y-0.5">
         <h2 className="text-2xl font-bold tracking-tight text-on-surface">Saúde - Alimentação</h2>
         <p className="text-xs text-on-surface-variant">Terça-feira, 24 de Outubro</p>
+      </section>
+
+      {/* Health Goals Form */}
+      <section className="glass-card p-6 rounded-[28px] space-y-4">
+        <h4 className="text-xs font-bold text-[#737686] uppercase tracking-widest border-b border-[#c3c6d7]/20 pb-2 mb-2">
+          Suas Metas de Saúde
+        </h4>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">Meta Peso (kg)</label>
+            <input type="number" step="0.1" value={weightGoal} onChange={(e) => setWeightGoal(e.target.value)} className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">Hidratação (copos)</label>
+            <input type="number" value={waterGoal} onChange={(e) => setWaterGoal(e.target.value)} className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#434655] ml-1 flex items-center gap-1">Altura (cm)</label>
+            <input type="number" value={height} onChange={(e) => setHeight(e.target.value)} className="w-full bg-[#f3f4f6] rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-1 focus:ring-primary focus:outline-none transition-all" />
+          </div>
+        </div>
+        <button onClick={handleUpdateHealthGoals} className="w-full bg-[#2563eb] text-white py-3 rounded-xl font-bold hover:opacity-95 active:scale-95 transition-all cursor-pointer text-sm">
+          Atualizar Metas
+        </button>
       </section>
 
       {/* Summary Dashboard Card */}

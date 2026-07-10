@@ -36,6 +36,7 @@ export interface UserProfile {
   avatarNutritionUrl: string;
   streakDays: number;
   height?: number;
+  birthDate?: string;
 }
 
 export interface WeightLog {
@@ -54,6 +55,7 @@ export interface Meal {
   fat: number;
   imageUrl: string;
   completed: boolean;
+  dateString?: string;
 }
 
 export interface Workout {
@@ -64,12 +66,17 @@ export interface Workout {
   intensity: 'Alta' | 'Intensa' | 'Baixa' | string;
   icon: string;
   color: string;
+  dateString?: string; // Data no formato YYYY-MM-DD
+  kmMeta?: number;
+  kmActual?: number;
 }
 
 export interface SleepLog {
   day: string;
   hours: number;
   score: number;
+  dateString?: string;
+  feeling?: 'Ótimo' | 'Bem' | 'Cansado' | string;
 }
 
 export interface AgendaEvent {
